@@ -1,0 +1,1 @@
+// (Optional) Schema for file details if needed
