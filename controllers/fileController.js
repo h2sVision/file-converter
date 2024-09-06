@@ -70,7 +70,7 @@ const handleFileUpload = async (req, res) => {
 // Download file
 const downloadFile = (req, res) => {
   const { fileName } = req.params;
-  const filePath = path.join(__dirname, '../uploads', fileName);
+  const filePath = path.join(__dirname, '../converted-files', fileName);
 
   if (fs.existsSync(filePath)) {
     res.download(filePath, fileName, (err) => {

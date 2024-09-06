@@ -1,25 +1,5 @@
 // Routes for file handling (optional if more file handling logic is needed)
 
-// const express = require('express');
-// const { handleFileUpload } = require('../controllers/fileController');
-// const validateFile = require('../middlewares/validateFile');
-
-// const router = express.Router();
-
-// router.post('/upload', validateFile, handleFileUpload);
-
-// module.exports = router;
-
-// const express = require('express');
-// const { handleFileUpload, downloadFile } = require('../controllers/fileController');
-// const validateFile = require('../middlewares/validateFile');
-// const router = express.Router();
-
-// router.post('/upload', validateFile, handleFileUpload);
-// router.get('/download/:fileName', downloadFile);
-
-// module.exports = router;
-
 const express = require('express');
 const { handleFileUpload, downloadFile } = require('../controllers/fileController');
 const validateFile = require('../middlewares/validateFile');

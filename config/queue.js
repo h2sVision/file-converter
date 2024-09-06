@@ -3,6 +3,7 @@ const Redis = require('ioredis');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const { convertToFormat } = require('../utils/fileConversion'); // Ensure correct path
+const Job = require('../models/job');  // Adjust the path as needed
 
 // Load environment variables from .env file
 dotenv.config();
@@ -25,7 +26,7 @@ const worker = new Worker('fileQueue', async (job) => {
     console.log(`Processing job ${job.id}`);
 
     // Extract job data
-    const { fileType, data, outputFormat } = job.data;
+    const {mongoJobId, fileType, data, outputFormat } = job.data;
 
     if (!data || !outputFormat) {
       throw new Error('Invalid job data');
@@ -45,9 +46,22 @@ const worker = new Worker('fileQueue', async (job) => {
     // Write the converted data to a file
     await fs.promises.writeFile(outputFilePath, convertedData);
 
+    // Update job status in MongoDB
+    await Job.findByIdAndUpdate(mongoJobId, {
+      status: 'completed',
+      result: outputFilePath,
+    });
+
     console.log(`Job ${job.id} completed successfully`);
+
+    // Return the path to the converted file as the result
+    return outputFilePath;
+
   } catch (error) {
     console.error(`Failed to process job ${job.id}:`, error);
+    await Job.findByIdAndUpdate(mongoJobId, {
+      status: 'failed',
+    });
     throw error; // Re-throw to let BullMQ handle retries or failures
   }
 }, {
