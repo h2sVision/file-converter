@@ -1,6 +1,5 @@
 // Handles file uploads, file parsing, and validation
 
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { fileQueue } = require('../config/queue');
@@ -8,8 +7,6 @@ const { convertToFormat } = require('../utils/fileConversion');
 const { successResponse, errorResponse } = require('../utils/responseHandler');
 const logger = require('../utils/logger');
 const { parseCSV, parseTSV, parseXML, parseJSON } = require('../utils/fileParser'); // Updated to include parseJSON
-const upload = require('../middlewares/uploadMiddleware');
-const xml2js = require('xml2js'); // For parsing XML with streams
 
 
 const handleFileUpload = async (req, res) => {
@@ -42,13 +39,20 @@ const handleFileUpload = async (req, res) => {
         return errorResponse(res, new Error('Unsupported file format'), 'Unsupported file format');
     }
 
-    // Convert data to the requested format
-    const outputFormat = req.body.outputFormat || 'json';
-    const convertedData = convertToFormat(data, outputFormat);
+    // // Convert data to the requested format
+     const outputFormat = req.body.outputFormat || 'json';
+     // Generate the output file name using job ID (the job will handle the saving)
+    const outputFilePath = `converted-files/${Date.now()}.${outputFormat}`;
 
-    // Save converted file to the uploads directory
-    const outputFilePath = path.join('uploads', `${Date.now()}.${outputFormat}`);
-    await fs.promises.writeFile(outputFilePath, convertedData);
+
+    // Remove the uploaded file after conversion if it's no longer needed
+    fs.unlink(file.path, (err) => {
+      if (err) {
+        logger.error('Failed to delete the original uploaded file:', err);
+      } else {
+        console.log(`Deleted original file: ${file.path}`);
+      }
+    });
 
     // Add job to the queue
     const job = await fileQueue.add('fileConversion', {

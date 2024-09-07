@@ -4,9 +4,6 @@ const { parseCSV, parseTSV, parseXML } = require('./fileParser');
 
 // Main function to convert data to a specific format
 const convertToFormat = (data, outputFormat) => {
-  // if (!data || !Array.isArray(data)) {                //new line
-  //   throw new Error('Invalid data for conversion');
-  // }
 
   if (!Array.isArray(data) || data.length === 0 || typeof data[0] !== 'object') {
     throw new Error('Invalid data for conversion');
