@@ -7,7 +7,7 @@ const jobSchema = new mongoose.Schema({
   outputFormat: { type: String, required: true },
   status: { type: String, enum: ['pending', 'processing', 'completed', 'failed'], default: 'pending' },
   resultFilePath: { type: String },
-  queueJobId: {type: String}
+  queueJobId: {type: String, index: true}
 }, { timestamps: true });
 
 module.exports = mongoose.model('Job', jobSchema);

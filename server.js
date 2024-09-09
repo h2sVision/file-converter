@@ -4,6 +4,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const errorHandler = require('./middlewares/errorHandler');
+const validateFile = require('./middlewares/validateFile');
 const fileRoutes = require('./routes/fileRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 
@@ -24,6 +25,8 @@ app.use('/api/jobs', jobRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
+app.use(validateFile);
+
 
 // Start server
 const PORT = process.env.PORT || 5000;

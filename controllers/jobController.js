@@ -37,11 +37,20 @@ const submitJob = async (req, res) => {
       fileType,
       fileData,
       outputFormat,
+      mongoJobId: mongoJob._id.toString(),  // Pass the MongoDB job ID to the queue
     });
 
     // Update the MongoDB job entry with the queue job ID
     mongoJob.queueJobId = job.id;
     await mongoJob.save();
+
+    res.status(200).json({
+      message: 'File uploaded, job created and queued for conversion',
+      data: {
+        jobId: mongoJob._id,  // Return the MongoDB job ID
+        queueJobId: job.id,   // Return the BullMQ job ID
+      }
+    });
 
 
     console.log('Job added to queue:', job.id);

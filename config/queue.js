@@ -20,60 +20,55 @@ const fileQueue = new Queue('fileQueue', {
   connection: redis,
 });
 
-// Create a worker to process jobs from the queue
 const worker = new Worker('fileQueue', async (job) => {
   try {
-    console.log(`Processing job ${job.id}`);
-
-    // Extract job data
-    const {mongoJobId, fileType, data, outputFormat } = job.data;
+    const { mongoJobId, data, outputFormat } = job.data;
 
     if (!data || !outputFormat) {
       throw new Error('Invalid job data');
     }
 
-    // Convert the file data to the requested format
+    // Update job status to 'processing'
+    await Job.findByIdAndUpdate(mongoJobId, { status: 'processing' });
+
+    // Convert file data
     const convertedData = convertToFormat(data, outputFormat);
 
-    // Define the path for the converted file
     const outputFilePath = `./converted-files/${job.id}.${outputFormat}`;
     
-    // Ensure the directory exists
     if (!fs.existsSync('./converted-files')) {
       fs.mkdirSync('./converted-files');
     }
 
-    // Write the converted data to a file
     await fs.promises.writeFile(outputFilePath, convertedData);
 
-    // Update job status in MongoDB
+    // Update job status to 'completed' and set the result file path
     await Job.findByIdAndUpdate(mongoJobId, {
       status: 'completed',
-      result: outputFilePath,
+      resultFilePath: outputFilePath,
     });
 
-    console.log(`Job ${job.id} completed successfully`);
-
-    // Return the path to the converted file as the result
     return outputFilePath;
 
   } catch (error) {
-    console.error(`Failed to process job ${job.id}:`, error);
+    const { mongoJobId } = job.data;
+
+    // Update job status to 'failed'
     await Job.findByIdAndUpdate(mongoJobId, {
       status: 'failed',
     });
-    throw error; // Re-throw to let BullMQ handle retries or failures
+
+    throw error;
   }
 }, {
   connection: redis,
-  concurrency: 5, // Number of jobs to process concurrently
+  concurrency: 5,
   limiter: {
-    max: 100, // Max number of jobs per interval
-    duration: 60000, // Interval duration in milliseconds
+    max: 100,
+    duration: 60000,
   }
 });
 
-// Handle worker events
 worker.on('completed', (job) => {
   console.log(`Job ${job.id} completed with result: ${job.returnvalue}`);
 });

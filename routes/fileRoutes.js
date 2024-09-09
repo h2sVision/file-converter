@@ -2,12 +2,20 @@
 
 const express = require('express');
 const { handleFileUpload, downloadFile } = require('../controllers/fileController');
-const validateFile = require('../middlewares/validateFile');
-const upload = require('../middlewares/uploadMiddleware'); // Import the multer middleware
+const { uploadSingleFile, handleMulterError } = require('../middlewares/uploadMiddleware'); // Import the updated multer middleware and error handler
+const validateFile = require('../middlewares/validateFile'); // Import your validation middleware
 const router = express.Router();
 
-router.post('/upload', upload.single('file'), validateFile, handleFileUpload); // Apply multer middleware here
-router.get('/download/:fileName', downloadFile);
+// POST route for file upload
+router.post('/upload', 
+  uploadSingleFile, // Multer file handling middleware
+  handleMulterError, // Error handling for file upload issues
+  validateFile, // Your custom validation middleware
+  handleFileUpload // File handling controller
+);
+
+// GET route for file download
+router.get('/download/:fileName', downloadFile); // File download route
 
 module.exports = router;
 
